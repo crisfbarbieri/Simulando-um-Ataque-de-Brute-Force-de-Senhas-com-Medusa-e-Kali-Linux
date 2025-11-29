@@ -9,12 +9,11 @@ Preparação de ambientes vulneráveis (máquina virtual metasploitable 2).
 Medusa foi escolhida por ser uma ferramenta de força bruta paralela voltada para testes de autenticação.
 Configuração de parâmetros básicos: alvo, serviço, lista de usuários e senhas.
 
-ping -c 192.168.56.101
 # Validado comunicação com a máquina vulnerável
+ping -c 192.168.56.101
 
-nmap -sV -p 21,22,80,445,139 192.168.56.101 
 # Verifica se as portas listadas estão abertas, fechadas ou filtradas. Caso abertas, tenta identificar o serviço e versão rodando nelas
-
+nmap -sV -p 21,22,80,445,139 192.168.56.101 
 
 - nmap → Ferramenta de varredura de rede.
 - -sV → Ativa a detecção de versão dos serviços. Ou seja, além de verificar se a porta está aberta, tenta identificar qual software e versão está rodando (ex.: Apache 2.4, OpenSSH 8.2).
@@ -26,17 +25,17 @@ nmap -sV -p 21,22,80,445,139 192.168.56.101
 - 139 → NetBIOS (antigo protocolo de compartilhamento no Windows)
 - 192.168.56.101 → IP alvo dentro da rede local 
 
-ftp 192.168.56.101
 # Tentativa de conexão com ftp
+ftp 192.168.56.101
 
-echo -e '\user\nmsfadmin\nadmin\nroot' > users.txt
 # criação do arquivo texto com uma lista de nomes de usuários (um por linha: quebra de linha > \n)
+echo -e '\user\nmsfadmin\nadmin\nroot' > users.txt
 
-echo -e '123456\npassword\nqwerty\nmsfadmin' > pass.txt
 # criação do arquivo texto com uma lista de senhas (um por linha: quebra de linha > \n)
+echo -e '123456\npassword\nqwerty\nmsfadmin' > pass.txt
 
-medusa -h 192.168.56.101 -U users.txt -P pass.txt -M ftp -t 6 
 # ataque de força bruta controlado usando a ferramenta Medusa contra o serviço FTP da máquina alvo .
+medusa -h 192.168.56.101 -U users.txt -P pass.txt -M ftp -t 6 
 
 - medusa → ferramenta de testes de autenticação em paralelo.
 - -h 192.168.56.101 → define o host alvo (IP da máquina vulnerável).
@@ -50,12 +49,11 @@ Para cada usuário em users.txt, ele testa todas as senhas em pass.txt.
 Faz isso em paralelo (até 6 tentativas simultâneas).
 Se alguma combinação for válida, retorna o login e senha encontrados.
 
-
+# ataque de força bruta contra um formulário de login HTTP, especificamente o da aplicação DVWA (Damn Vulnerable Web Application) hospedada no alvo
 medusa -h 192.168.56.101 -U users.txt -P pass.txt -M http \
 -m PAGE: '/dvwa/login.php' 
 -m FORM: 'username="USER"&password="PASS"&login=Login' 
 -m 'FAIL-Login failed' -t 6
-# ataque de força bruta contra um formulário de login HTTP, especificamente o da aplicação DVWA (Damn Vulnerable Web Application) hospedada no alvo
 
 - -h 192.168.56.101 → IP do host alvo.
 - -U users.txt → arquivo com lista de usuários.
@@ -72,8 +70,8 @@ medusa -h 192.168.56.101 -U users.txt -P pass.txt -M http \
 - Se a resposta não contiver a string "FAIL-Login failed", significa que a combinação foi aceita.
 - O processo é feito em paralelo com até 6 threads, acelerando a execução.
 
-enum4linux - a 192.168.56.101 | tee enum4_output.txt   
 # utilizando a ferramenta enum4linux para coletar informações de um host Windows ou Samba
+enum4linux - a 192.168.56.101 | tee enum4_output.txt   
 
 - enum4linux → ferramenta usada para enumeração de informações em sistemas Windows/Samba, muito útil em testes de segurança.
 - -a → opção que significa "all" (tudo). Executa todos os métodos de enumeração disponíveis:
@@ -96,14 +94,14 @@ Políticas de senha (complexidade, expiração)
 Versão do sistema operacional
 Tudo isso é salvo em enum4_output.txt para análise posterior.
 
-echo -e '\user\nmsfadmin\nservice' > smb_users.txt
 # criação do arquivo texto com uma lista de nomes de usuários (um por linha: quebra de linha > \n)
+echo -e '\user\nmsfadmin\nservice' > smb_users.txt
 
-echo -e 'password\n123456\nWelcome123\nmsfadmin' > senhas_spray.txt
 # criação do arquivo texto com uma lista de senhas (um por linha: quebra de linha > \n)
+echo -e 'password\n123456\nWelcome123\nmsfadmin' > senhas_spray.txt
 
-medusa -h 192.168.56.101 -U smb_users.txt -P senhas_spray.txt -M smbnt -t 2 -T 50
 # ataque de força bruta contra o serviço SMB/NT (Server Message Block) da máquina alvo
+medusa -h 192.168.56.101 -U smb_users.txt -P senhas_spray.txt -M smbnt -t 2 -T 50
 
 - -h 192.168.56.101 → IP do host alvo.
 - -U smb_users.txt → arquivo contendo lista de usuários SMB a serem testados.
@@ -117,8 +115,8 @@ Para cada usuário listado em smb_users.txt, ele tenta autenticar usando as senh
 Executa até 2 threads em paralelo, cada uma podendo realizar até 50 tentativas.
 Se alguma combinação de usuário/senha for válida, o Medusa retorna o login encontrado.
 
-smbclient -L //192.168.56.101 -U msfadmin
 # ferramenta smbclient para listar os compartilhamentos disponíveis em um servidor SMB (Windows/Samba).
+smbclient -L //192.168.56.101 -U msfadmin
 
 - smbclient → cliente SMB/CIFS usado para acessar compartilhamentos de arquivos em sistemas Windows ou Samba.
 - -L → opção que significa listar os compartilhamentos disponíveis no servidor.
